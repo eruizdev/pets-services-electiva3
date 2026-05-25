@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	_ "github.com/lib/pq"
 )
@@ -27,8 +28,16 @@ func Connect() {
 		log.Fatal("Error abriendo DB: ", err)
 	}
 
-	if err = DB.Ping(); err != nil {
-		log.Fatal("Error conectando a DB: ", err)
+	// Reintentar conexion hasta 15 veces
+	for i := 0; i < 15; i++ {
+		if err = DB.Ping(); err == nil {
+			break
+		}
+		log.Printf("DB no lista, reintento %d/15...", i+1)
+		time.Sleep(3 * time.Second)
+	}
+	if err != nil {
+		log.Fatal("No se pudo conectar a DB: ", err)
 	}
 
 	createTables()
